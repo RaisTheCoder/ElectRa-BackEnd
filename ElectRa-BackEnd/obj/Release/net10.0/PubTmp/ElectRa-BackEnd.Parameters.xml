@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<parameters>
+  <parameter name="IIS Web Application Name" description="" value="site72552" tags="IisApp">
+    <parameterEntry kind="ProviderPath" scope="IisApp" match="^/home/raiko/Desktop/ElectRa-BackEnd/ElectRa-BackEnd/bin/Release/net10\.0/publish/$" />
+  </parameter>
+</parameters>

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ElectRa_BackEnd.DataAccessLayer;
 using ElectRa_BackEnd.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ElectRa_BackEnd.Controllers
 {
@@ -15,94 +16,143 @@ namespace ElectRa_BackEnd.Controllers
     public class BrandsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public BrandsController(AppDbContext context)
+        public BrandsController(AppDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
-        // GET: api/Brands
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Brand>>> GetBrands()
+        public async Task<IActionResult> Brands(int? limit, int? skip, bool ignoreDisabled = true)
         {
-            return await _context.Brands.ToListAsync();
+            var query = _context.Brands.AsQueryable();
+
+            if (ignoreDisabled)
+                query = query.Where(b => b.Enabled == true);
+
+            if (skip > 0)
+                query = query.Skip((int)skip);
+
+            if (limit > 0)
+                query = query.Take((int)limit);
+
+            var brands = await query.ToListAsync();
+            return Ok(brands);
         }
 
-        // GET: api/Brands/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Brand>> GetBrand(long id)
+        public async Task<ActionResult> Brand(long id)
         {
-            var brand = await _context.Brands.FindAsync(id);
+            var brand = await _context.Brands.FirstOrDefaultAsync(b => b.Id == id);
 
             if (brand == null)
-            {
                 return NotFound();
-            }
 
-            return brand;
+            return Ok(brand);
         }
 
-        // PUT: api/Brands/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutBrand(long id, Brand brand)
+        [HttpPost("[action]")]
+        [Authorize(Roles = "Admin, Manager")]
+        public async Task<IActionResult> Add(Brand brand, IFormFile? formFile)
         {
-            if (id != brand.Id)
+            if (formFile != null && formFile.Length > 0)
             {
-                return BadRequest();
-            }
+                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/brands");
 
-            _context.Entry(brand).State = EntityState.Modified;
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!BrandExists(id))
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(formFile.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    return NotFound();
+                    await formFile.CopyToAsync(stream);
                 }
-                else
-                {
-                    throw;
-                }
+
+                var baseUrl = $"{Request.Scheme}://{Request.Host}"; 
+                brand.Icon = $"{baseUrl}/uploads/brands/{fileName}";
             }
-
-            return NoContent();
-        }
-
-        // POST: api/Brands
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Brand>> PostBrand(Brand brand)
-        {
             _context.Brands.Add(brand);
+            
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetBrand", new { id = brand.Id }, brand);
+            return Ok();
         }
 
-        // DELETE: api/Brands/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteBrand(long id)
+        [HttpPost("{id}")]
+        [Authorize(Roles = "Admin, Manager")]
+        public async Task<IActionResult> Update(long id, Brand newBrand, [FromForm] FormFile? formFile)
         {
-            var brand = await _context.Brands.FindAsync(id);
-            if (brand == null)
+            var brand = await _context.Brands.FirstOrDefaultAsync(b => b.Id == id);
+
+            brand._Name = newBrand._Name;
+            
+            if (formFile != null && formFile.Length > 0)
             {
-                return NotFound();
+                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/brands");
+
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+			
+                if (!string.IsNullOrEmpty(brand.Icon))
+                {
+                    var oldImageName = Path.GetFileName(new Uri(brand.Icon).LocalPath);
+                    var oldImagePath = Path.Combine(uploadsFolder, oldImageName);
+
+                    if (System.IO.File.Exists(oldImagePath))
+                    {
+                        System.IO.File.Delete(oldImagePath);
+                    }
+                }
+			
+                var fileName = Guid.NewGuid() + Path.GetExtension(formFile.FileName);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await formFile.CopyToAsync(stream);
+
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                brand.Icon = $"{baseUrl}/uploads/brands/{fileName}";
             }
 
+            return Ok();
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin, Manager")]
+        public async Task<IActionResult> Disable(long id, bool? boolean)
+        {
+            Brand? brand = await _context.Brands.FirstOrDefaultAsync(b => b.Id == id);
+            
+            if (brand == null)
+                return NotFound();
+
+            if (boolean != null)
+            {
+                brand.Enabled = (bool) boolean;
+            } else
+            {
+                brand.Enabled = !brand.Enabled;
+            }
+		
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(long id)
+        {
+            Brand? brand = await _context.Brands.FirstOrDefaultAsync(b => b.Id == id);
+
+            if (brand == null)
+                return NotFound();
+            
             _context.Brands.Remove(brand);
             await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool BrandExists(long id)
-        {
-            return _context.Brands.Any(e => e.Id == id);
+            return Ok();
         }
     }
 }

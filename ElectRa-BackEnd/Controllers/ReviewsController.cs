@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ElectRa_BackEnd.DataAccessLayer;
+using ElectRa_BackEnd.DataTransferObjects;
 using ElectRa_BackEnd.Models;
+using Microsoft.AspNetCore.Authorization;
+using NuGet.Protocol;
 
 namespace ElectRa_BackEnd.Controllers
 {
@@ -20,99 +24,126 @@ namespace ElectRa_BackEnd.Controllers
         {
             _context = context;
         }
-
-        // GET: api/Reviews
+        
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Review>>> GetReviews()
+        public async Task<IActionResult> Reviews(int? limit, int? skip)
         {
-            return await _context.Reviews.ToListAsync();
-        }
+            var query = _context.Reviews
+                .AsQueryable()
+                .Include(r => r.reviewHelpfuls)
+                .Include(r => r.User)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Comment,
+                    r.UserId,
+                    r.Rating,
+                    r.ProductId,
+                    r.Product,
+                    reviewHelpfuls = r.reviewHelpfuls.Select(rh => new
+                    {
+                        rh.UserId,
+                        rh.ReviewId
+                    }),
+                    r.User
+                });
 
-        [HttpGet("/product/{id}")]
-        public async Task<ActionResult<List<Review>>> GetReviewsByProduct(long id)
-        {
-            var reviews = await _context.Reviews
-                .Where(review => review.ProductId == id)
-                .ToListAsync();
-            
+            if (skip < 0)
+                query.Skip((int) skip);
+
+            if (limit > 0)
+                query.Take((int)limit);
+
+            var reviews = await query.ToListAsync();
+
             return Ok(reviews);
         }
 
-        // GET: api/Reviews/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Review>> GetReview(long id)
+        public async Task<IActionResult> Reviews(long id)
         {
-            var review = await _context.Reviews.FindAsync(id);
+            var review = await _context.Reviews
+                .Where(r => r.Id == id)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Comment,
+                    r.UserId,
+                    r.ProductId,
+                    r.Product,
+                    reviewHelpfuls = r.reviewHelpfuls.Select(rh => new
+                    {
+                        rh.UserId,
+                        rh.ReviewId
+                    })
+                })
+                .FirstOrDefaultAsync();
 
             if (review == null)
-            {
                 return NotFound();
-            }
-
-            return review;
+            
+            return Ok(review);
         }
 
-        // PUT: api/Reviews/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutReview(long id, Review review)
+        [Authorize]
+        [HttpPost("[action]")]
+        public async Task<IActionResult> Add(ReviewDTO dto)
         {
-            if (id != review.Id)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var review = new Review
             {
-                return BadRequest();
-            }
+                Comment = dto.Comment,
+                Rating = dto.Rating,
+                ProductId = dto.ProductId,
+                UserId = long.Parse(userId),
+                foundThisHelpful = 0
+            };
 
-            _context.Entry(review).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ReviewExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Reviews
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Review>> PostReview(Review review)
-        {
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetReview", new { id = review.Id }, review);
+            return Ok();
         }
-
-        // DELETE: api/Reviews/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReview(long id)
+        
+        [Authorize]
+        [HttpPost("{id}/[action]")]
+        public async Task<IActionResult> Helpful(long id)
         {
-            var review = await _context.Reviews.FindAsync(id);
-            if (review == null)
+            var userId = long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var existing = await _context.ReviewHelpfuls
+                .FirstOrDefaultAsync(x => x.ReviewId == id && x.UserId == userId);
+
+            if (existing != null)
             {
-                return NotFound();
+                _context.ReviewHelpfuls.Remove(existing);
+                await _context.SaveChangesAsync();
+                return Ok(new { helpful = false });
             }
 
-            _context.Reviews.Remove(review);
-            await _context.SaveChangesAsync();
+            _context.ReviewHelpfuls.Add(new ReviewHelpful
+            {
+                ReviewId = id,
+                UserId = userId
+            });
 
-            return NoContent();
+            await _context.SaveChangesAsync();
+            return Ok(new { helpful = true });
         }
 
-        private bool ReviewExists(long id)
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> Delete(long id)
         {
-            return _context.Reviews.Any(e => e.Id == id);
+            Review? review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == id);
+
+            if (review == null)
+                return NotFound();
+            
+            _context.Reviews.Remove(review);
+            await _context.SaveChangesAsync();
+            return Ok();
         }
     }
 }
