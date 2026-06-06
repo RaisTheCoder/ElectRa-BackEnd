@@ -201,14 +201,13 @@ public class AccountController : ControllerBase
 	public async Task<IActionResult> DeleteAccount()
 	{
 		var user = await _userManager.GetUserAsync(User);
-		var baseUrl = $"{Request.Scheme}://{Request.Host}";
 
 		if (user == null)
 			return NotFound();
 		
 		await _userManager.SetUserNameAsync(user, $"deleted_{user.Id}");
 		
-		user.ProfilePic = $"{baseUrl}/images/deleted-account.png";
+		user.ProfilePic = $"{Request.Scheme}://{Request.Host}/images/deleted-account.png";
 		
 		await _userManager.SetLockoutEnabledAsync(user, true);
 		await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
@@ -257,7 +256,7 @@ public class AccountController : ControllerBase
 
 			using var stream = new FileStream(filePath, FileMode.Create);
 			await formFile.CopyToAsync(stream);
-
+			
 			var baseUrl = $"{Request.Scheme}://{Request.Host}";
 			currentUser.ProfilePic = $"{baseUrl}/uploads/users/{fileName}";
 		}

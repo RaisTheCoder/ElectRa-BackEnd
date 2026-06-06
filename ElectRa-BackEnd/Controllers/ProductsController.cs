@@ -181,8 +181,8 @@ public class ProductsController : ControllerBase
 			{
 				await formFile.CopyToAsync(stream);
 			}
-
-			var baseUrl = $"{Request.Scheme}://{Request.Host}"; 
+			
+			var baseUrl = $"{Request.Scheme}://{Request.Host}";
 			product.Thumbnail = $"{baseUrl}/uploads/products/{fileName}";
 		}
 
@@ -233,7 +233,7 @@ public class ProductsController : ControllerBase
 
 			using var stream = new FileStream(filePath, FileMode.Create);
 			await formFile.CopyToAsync(stream);
-
+			
 			var baseUrl = $"{Request.Scheme}://{Request.Host}";
 			product.Thumbnail = $"{baseUrl}/uploads/products/{fileName}";
 		}

@@ -39,13 +39,26 @@ namespace ElectRa_BackEnd.Controllers
                     r.UserId,
                     r.Rating,
                     r.ProductId,
-                    r.Product,
+                    Product = new
+                    {
+                        r.Product.Id,
+                        r.Product.Thumbnail,
+                        r.Product.Title,
+                        r.Product.Brand
+                    },
                     reviewHelpfuls = r.reviewHelpfuls.Select(rh => new
                     {
                         rh.UserId,
                         rh.ReviewId
                     }),
-                    r.User
+                    User = new
+                    {
+                        r.User.Id,
+                        r.User.FirstName,
+                        r.User.LastName,
+                        r.User.ProfilePic,
+                        r.User.UserName
+                    }
                 });
 
             if (skip < 0)
@@ -69,13 +82,28 @@ namespace ElectRa_BackEnd.Controllers
                     r.Id,
                     r.Comment,
                     r.UserId,
+                    r.Rating,
                     r.ProductId,
-                    r.Product,
+                    Product = new
+                    {
+                        r.Product.Id,
+                        r.Product.Thumbnail,
+                        r.Product.Title,
+                        r.Product.Brand
+                    },
                     reviewHelpfuls = r.reviewHelpfuls.Select(rh => new
                     {
                         rh.UserId,
                         rh.ReviewId
-                    })
+                    }),
+                    User = new
+                    {
+                        r.User.Id,
+                        r.User.FirstName,
+                        r.User.LastName,
+                        r.User.ProfilePic,
+                        r.User.UserName
+                    }
                 })
                 .FirstOrDefaultAsync();
 

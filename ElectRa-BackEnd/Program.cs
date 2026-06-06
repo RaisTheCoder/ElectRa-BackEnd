@@ -1,13 +1,9 @@
-using System.Text;
 using ElectRa_BackEnd.DataAccessLayer;
 using ElectRa_BackEnd.Models;
 using ElectRa_BackEnd.Services.Implementations;
 using ElectRa_BackEnd.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -58,7 +54,6 @@ services.AddCors(options =>
 		policy =>
 		{
 			policy.WithOrigins(
-					"http://localhost:2027",
 					"https://raiko-electra.vercel.app"
 					)
 				.AllowAnyHeader()
@@ -76,7 +71,6 @@ if (app.Environment.IsDevelopment())
 	db.Database.Migrate();
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
 	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -87,8 +81,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-
-// app.UseCors("AllowVercel");
 app.UseCors("AllowReact");
 
 app.UseHttpsRedirection();

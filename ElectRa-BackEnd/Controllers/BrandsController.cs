@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ElectRa_BackEnd.DataAccessLayer;
@@ -71,8 +66,8 @@ namespace ElectRa_BackEnd.Controllers
                 {
                     await formFile.CopyToAsync(stream);
                 }
-
-                var baseUrl = $"{Request.Scheme}://{Request.Host}"; 
+                
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
                 brand.Icon = $"{baseUrl}/uploads/brands/{fileName}";
             }
             _context.Brands.Add(brand);
@@ -112,7 +107,7 @@ namespace ElectRa_BackEnd.Controllers
 
                 using var stream = new FileStream(filePath, FileMode.Create);
                 await formFile.CopyToAsync(stream);
-
+                
                 var baseUrl = $"{Request.Scheme}://{Request.Host}";
                 brand.Icon = $"{baseUrl}/uploads/brands/{fileName}";
             }
