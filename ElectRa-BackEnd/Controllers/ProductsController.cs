@@ -187,6 +187,7 @@ public class ProductsController : ControllerBase
 		}
 
 		product.Date = DateTime.UtcNow;
+		product.SoldCount = 0;
 
 		_context.Products.Add(product);
 		await _context.SaveChangesAsync();

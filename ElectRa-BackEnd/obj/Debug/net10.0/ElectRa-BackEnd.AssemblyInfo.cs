@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ElectRa-BackEnd")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+84209f84c48c9fd5e1166f09301a8b08b3a10d2f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ab944986c13bf2efca5f9aa5c2b51b493e7e4ef0")]
 [assembly: System.Reflection.AssemblyProductAttribute("ElectRa-BackEnd")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ElectRa-BackEnd")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

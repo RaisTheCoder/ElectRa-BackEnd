@@ -26,6 +26,7 @@ public class CartController : ControllerBase
         var products = await _context.Products
             .Where(p => productIds.Contains(p.Id))
             .Include(p => p.Reviews)
+            .Include(p => p.Brand)
             .ToListAsync();
 
         var result = new List<ValidatedCartItemDTO>();
@@ -53,6 +54,7 @@ public class CartController : ControllerBase
                 ProductId = product.Id,
                 Title = product.Title,
                 Thumbnail = product.Thumbnail,
+                Brand = product.Brand,
                 Price = product.DiscountPercentage > 0
                     ? product.Price - (product.Price * product.DiscountPercentage.Value / 100m)
                     : product.Price,

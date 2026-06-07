@@ -1,3 +1,5 @@
+using ElectRa_BackEnd.Models;
+
 namespace ElectRa_BackEnd.DataTransferObjects;
 
 public class ValidatedCartItemDTO
@@ -11,4 +13,5 @@ public class ValidatedCartItemDTO
 	public decimal Rating { get; set; }
 	public int Quantity { get; set; }
 	public bool Available { get; set; }
+	public Brand Brand { get; set; }
 }

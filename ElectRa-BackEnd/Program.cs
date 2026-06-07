@@ -54,7 +54,8 @@ services.AddCors(options =>
 		policy =>
 		{
 			policy.WithOrigins(
-					"https://raiko-electra.vercel.app"
+					"https://raiko-electra.vercel.app",
+					"http://localhost:2027"
 					)
 				.AllowAnyHeader()
 				.AllowCredentials()

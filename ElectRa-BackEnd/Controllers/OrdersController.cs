@@ -34,7 +34,22 @@ public class OrdersController : ControllerBase
 		{
 			o.Id,
 			o.Address,
-			o.Items,
+			Items = o.Items.Select(i => new
+			{
+				Id = i.Id,
+				Title = i.Title,
+				ProductId = i.ProductId,
+				Quantity = i.Quantity,
+				Price = i.Price,
+				TotalPrice = i.TotalPrice,
+				Product = new
+				{
+					Id = i.Product.Id,
+					Title = i.Product.Title,
+					Thumbnail = i.Product.Thumbnail,
+					Brand = i.Product.Brand
+				}
+			}),
 			o.CreatedAt,
 			o.Note,
 			o.TotalPrice,
@@ -43,6 +58,9 @@ public class OrdersController : ControllerBase
 			o.User,
 			o.AdminNote,
 			o.Phone,
+			o.PointsGranted,
+			o.PointsUsed,
+			o.EarnedPoints,
 			o.TrackingNumber
 		});
 
@@ -64,7 +82,22 @@ public class OrdersController : ControllerBase
 		{
 			o.Id,
 			o.Address,
-			o.Items,
+			Items = o.Items.Select(i => new
+			{
+				Id = i.Id,
+				Title = i.Title,
+				ProductId = i.ProductId,
+				Quantity = i.Quantity,
+				Price = i.Price,
+				TotalPrice = i.TotalPrice,
+				Product = new
+				{
+					Id = i.Product.Id,
+					Title = i.Product.Title,
+					Thumbnail = i.Product.Thumbnail,
+					Brand = i.Product.Brand
+				}
+			}),
 			o.CreatedAt,
 			o.Note,
 			o.TotalPrice,
@@ -73,6 +106,9 @@ public class OrdersController : ControllerBase
 			o.User,
 			o.AdminNote,
 			o.Phone,
+			o.PointsGranted,
+			o.PointsUsed,
+			o.EarnedPoints,
 			o.TrackingNumber
 		}).FirstOrDefaultAsync();
 		

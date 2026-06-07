@@ -314,6 +314,7 @@ public class AccountController : ControllerBase
 			products = await _context.Products.CountAsync(),
 			reviews = await _context.Reviews.CountAsync(),
 			categories = await _context.Categories.CountAsync(),
+			brands = await _context.Brands.CountAsync(),
 			productsSold = totalSold,
 			mostSold = mostSold
 		});
